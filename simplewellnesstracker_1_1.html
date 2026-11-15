@@ -1,0 +1,2950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SimpleWellnessTracker" />
+  <meta name="theme-color" content="#ffffff" />
+  <link id="appleTouchIcon" rel="apple-touch-icon" />
+  <link id="webManifestLink" rel="manifest" />
+  <title>SimpleWellnessTracker 1.1 — Daily Wellness & Consumption Tracker</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Base typography, safe-area support & smooth scrolling */
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .safe-top-header {
+      padding-top: env(safe-area-inset-top);
+    }
+
+    /* Custom subtle scrollbar for timeline and horizontal charts */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Toast entrance animation */
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .toast-enter {
+      animation: slideUpFade 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-100 selection:text-emerald-900">
+
+  <!-- ===================================================================== -->
+  <!-- 1. GLOBAL TOP NAVIGATION HEADER                                       -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 safe-top-header">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        
+        <!-- Brand Identity -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-500 flex items-center justify-center text-white shadow-sm shadow-emerald-200 shrink-0">
+            <!-- Pulse Wellness SVG Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l3-8 4 16 3-8h4" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">SimpleWellnessTracker 1.1</h1>
+              <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                Daily Wellness
+              </span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-500">Food • Hydration • Sleep/Rest • Activity</p>
+          </div>
+        </div>
+
+        <!-- Two-Page Navigation Switcher -->
+        <nav aria-label="Primary Pages" class="order-3 sm:order-2 w-full sm:w-auto flex items-center bg-slate-100/95 p-1 rounded-xl border border-slate-200/80">
+          <button
+            type="button"
+            id="navEntryBtn"
+            onclick="switchPage('entry')"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>Entry</span>
+          </button>
+
+          <button
+            type="button"
+            id="navStatsBtn"
+            onclick="switchPage('statistics')"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Statistics</span>
+          </button>
+        </nav>
+
+        <!-- Global Utility Controls -->
+        <div class="order-2 sm:order-3 flex items-center gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            onclick="handleExportBackup()"
+            class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100/90 border border-slate-200/80 hover:bg-slate-200/70 transition"
+            title="Export data backup for iOS/Android transfer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span class="hidden md:inline">Backup</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="triggerImportBackup()"
+            class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100/90 border border-slate-200/80 hover:bg-slate-200/70 transition"
+            title="Restore data from backup file"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span class="hidden md:inline">Restore</span>
+          </button>
+          <input
+            type="file"
+            id="importBackupInput"
+            accept=".json,application/json"
+            onchange="handleImportBackupFile(event)"
+            class="hidden"
+          />
+
+          <button
+            type="button"
+            onclick="handleLoadSampleData()"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 hover:bg-emerald-100/80 transition"
+            title="Load 6-month sample wellness data"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Load Sample</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN CONTENT SHELL                                                    -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- =================================================================== -->
+    <!-- PAGE 1: ENTRY PAGE                                                  -->
+    <!-- =================================================================== -->
+    <div id="entryPage" class="space-y-6">
+
+      <!-- Entry Page Date Navigation & Day Controls Bar -->
+      <section aria-label="Date Navigation" class="bg-white rounded-2xl p-3.5 sm:px-5 sm:py-3.5 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <!-- Date Switcher Pill -->
+          <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/70">
+            <button
+              type="button"
+              id="prevDayBtn"
+              onclick="changeDate(-1)"
+              class="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              aria-label="Previous Day"
+              title="Previous Day"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <label
+              for="entryDatePicker"
+              class="relative px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 hover:bg-white/90 transition flex items-center gap-2 min-w-[165px] sm:min-w-[190px] justify-center cursor-pointer"
+              title="Pick a date"
+            >
+              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span id="currentDateLabel">Today</span>
+              <input
+                type="date"
+                id="entryDatePicker"
+                onchange="handleDatePickerChange(this.value)"
+                class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                aria-label="Select date"
+              />
+            </label>
+
+            <button
+              type="button"
+              id="nextDayBtn"
+              onclick="changeDate(1)"
+              class="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              aria-label="Next Day"
+              title="Next Day"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            id="jumpTodayPill"
+            onclick="jumpToToday()"
+            class="hidden px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-100/80 transition"
+          >
+            Jump to Today
+          </button>
+        </div>
+
+        <div class="flex items-center justify-end">
+          <button
+            type="button"
+            onclick="handleClearDay()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-rose-600 bg-slate-100/90 hover:bg-rose-50 border border-slate-200/80 transition"
+            title="Clear all entries for selected day"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Clear Day</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- LOG ENTRY SECTION & DAILY TIMELINE (EQUAL PROPORTIONAL WIDTH)       -->
+      <!-- =================================================================== -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- LEFT COLUMN: LOG ENTRY (6 cols on lg — 50% width) -->
+        <div id="logEntryPanel" class="lg:col-span-6 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all">
+          <div class="p-4 sm:p-5 border-b border-slate-100">
+            <h2 id="logEntryPanelTitle" class="text-base font-bold text-slate-900">Log Wellness Entry</h2>
+
+            <!-- Category Tabs (Evenly spaced around each word label) -->
+            <div class="flex flex-wrap items-center gap-1 bg-slate-100 p-1.5 rounded-xl mt-4" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                data-tab="food"
+                onclick="selectCategoryTab('food')"
+                class="category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition whitespace-nowrap"
+              >
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                <span>Food</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                data-tab="drinks"
+                onclick="selectCategoryTab('drinks')"
+                class="category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition whitespace-nowrap"
+              >
+                <span class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
+                <span>Drinks</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                data-tab="rest"
+                onclick="selectCategoryTab('rest')"
+                class="category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition whitespace-nowrap"
+              >
+                <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                <span>Sleep/Rest</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                data-tab="activities"
+                onclick="selectCategoryTab('activities')"
+                class="category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition whitespace-nowrap"
+              >
+                <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                <span>Activities</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                data-tab="wellbeing"
+                onclick="selectCategoryTab('wellbeing')"
+                class="category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition whitespace-nowrap"
+              >
+                <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                <span>Well/Unwell</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 sm:p-5 space-y-5">
+            <!-- Edit Mode Indicator Banner -->
+            <div id="editModeBanner" class="hidden flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900 text-xs">
+              <div class="flex items-center gap-2 min-w-0">
+                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span id="editModeBannerText" class="font-semibold truncate">Editing entry</span>
+              </div>
+              <button
+                type="button"
+                onclick="cancelEditEntry()"
+                class="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100/80 text-amber-800 font-semibold border border-amber-200/80 transition shrink-0"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <!-- Dynamic Custom Entry Form -->
+            <form id="customEntryForm" onsubmit="handleCustomFormSubmit(event)" class="space-y-4">
+              <div id="dynamicFormFields" class="space-y-3.5">
+                <!-- Populated dynamically via JS based on active tab -->
+              </div>
+
+              <button
+                type="submit"
+                id="submitEntryBtn"
+                class="w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] transition shadow-xs flex items-center justify-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span id="submitBtnText">Add Food Entry</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: DAILY TIMELINE & FILTERABLE LOG (6 cols on lg — 50% width) -->
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col">
+          <div class="p-4 sm:p-5 border-b border-slate-100">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <h2 class="text-base font-bold text-slate-900">Daily Timeline</h2>
+                <span id="timelineCountBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 tabular-nums">0</span>
+              </div>
+            </div>
+
+            <!-- Filter Buttons (Evenly spaced around each word label) -->
+            <div class="flex flex-wrap items-center gap-1 bg-slate-100 p-1.5 rounded-xl mt-4" id="timelineFilters">
+              <button type="button" data-filter="all" onclick="setTimelineFilter('all')" class="filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap">All</button>
+              <button type="button" data-filter="food" onclick="setTimelineFilter('food')" class="filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap">Food</button>
+              <button type="button" data-filter="drinks" onclick="setTimelineFilter('drinks')" class="filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap">Drinks</button>
+              <button type="button" data-filter="rest" onclick="setTimelineFilter('rest')" class="filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap">Sleep/Rest</button>
+              <button type="button" data-filter="activities" onclick="setTimelineFilter('activities')" class="filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap">Activities</button>
+              <button type="button" data-filter="wellbeing" onclick="setTimelineFilter('wellbeing')" class="filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap">Well/Unwell</button>
+            </div>
+          </div>
+
+          <!-- Timeline Items Container -->
+          <div id="timelineContainer" class="p-4 sm:p-5 space-y-3 max-h-[540px] overflow-y-auto custom-scrollbar">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+      </section>
+
+    </div><!-- End #entryPage -->
+
+    <!-- =================================================================== -->
+    <!-- PAGE 2: STATISTICS PAGE                                             -->
+    <!-- =================================================================== -->
+    <div id="statisticsPage" class="hidden space-y-6">
+
+      <!-- Statistics Page Header & Timeframe Switcher -->
+      <section class="bg-white rounded-2xl p-4 sm:px-6 sm:py-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Wellness Trends & Analytics</h2>
+        </div>
+
+        <!-- Timeframe Switcher (7 Days / 14 Days / Last Month / Last 6 Months) -->
+        <div class="inline-flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80 self-start sm:self-auto" role="group" aria-label="Timeframe Selector">
+          <button
+            type="button"
+            id="tf7Btn"
+            onclick="setStatsTimeframe(7)"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+          >
+            Last 7 Days
+          </button>
+          <button
+            type="button"
+            id="tf14Btn"
+            onclick="setStatsTimeframe(14)"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+          >
+            Last 14 Days
+          </button>
+          <button
+            type="button"
+            id="tf30Btn"
+            onclick="setStatsTimeframe(30)"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+          >
+            Last Month
+          </button>
+          <button
+            type="button"
+            id="tf180Btn"
+            onclick="setStatsTimeframe(180)"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+          >
+            Last 6 Months
+          </button>
+        </div>
+      </section>
+
+      <!-- 4 PERIOD SUMMARY KPI CARDS -->
+      <section aria-label="Period Averages" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        
+        <!-- KPI 1: Daily Avg Food Portions (Emerald) -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-500">Daily Avg Portions</span>
+            <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1.5 flex-wrap">
+            <span id="kpiAvgFoodVal" class="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums">0</span>
+            <span class="text-xs font-medium text-slate-400">portions / day</span>
+          </div>
+          <p id="kpiAvgFoodSub" class="text-xs text-emerald-700 font-medium mt-2">0 total portions</p>
+        </div>
+
+        <!-- KPI 2: Daily Avg Hydration (Sky Blue) -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-500">Daily Avg Hydration</span>
+            <span class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1.5 flex-wrap">
+            <span id="kpiAvgDrinksVal" class="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums">0</span>
+            <span class="text-xs font-medium text-slate-400">mL / day</span>
+          </div>
+          <p id="kpiAvgDrinksSub" class="text-xs text-sky-700 font-medium mt-2">0 mL total</p>
+        </div>
+
+        <!-- KPI 3: Daily Avg Sleep/Rest (Indigo) -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-500">Daily Avg Sleep/Rest</span>
+            <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1.5 flex-wrap">
+            <span id="kpiAvgRestVal" class="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums">0</span>
+            <span class="text-xs font-medium text-slate-400">Hours / day</span>
+          </div>
+          <p id="kpiAvgRestSub" class="text-xs text-indigo-700 font-medium mt-2">Avg quality — / 5</p>
+        </div>
+
+        <!-- KPI 4: Daily Avg Activity (Amber) -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-500">Daily Avg Activity</span>
+            <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1.5 flex-wrap">
+            <span id="kpiAvgActVal" class="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums">0</span>
+            <span class="text-xs font-medium text-slate-400">Minutes / day</span>
+          </div>
+          <p id="kpiAvgActSub" class="text-xs text-amber-700 font-medium mt-2">0 total Minutes</p>
+        </div>
+
+      </section>
+
+      <!-- MULTI-DAY WELLNESS TRENDS GROUPED BAR CHART -->
+      <section class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+          <div>
+            <h3 id="balanceChartTitle" class="text-base font-bold text-slate-900">7-Day Wellness Trends</h3>
+          </div>
+          <div class="flex items-center flex-wrap gap-2 text-xs font-medium text-slate-600">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 text-emerald-800 border border-emerald-200/70">
+              <span class="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>
+              <span>Food</span>
+              <span class="w-2.5 border-t-2 border-dashed border-emerald-600"></span>
+              <strong id="trendAvgFoodBadge" class="font-semibold tabular-nums">Avg: 0</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50/80 text-sky-800 border border-sky-200/70">
+              <span class="w-2.5 h-2.5 rounded-xs bg-sky-500"></span>
+              <span>Drinks</span>
+              <span class="w-2.5 border-t-2 border-dashed border-sky-600"></span>
+              <strong id="trendAvgDrinksBadge" class="font-semibold tabular-nums">Avg: 0 mL</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50/80 text-indigo-800 border border-indigo-200/70">
+              <span class="w-2.5 h-2.5 rounded-xs bg-indigo-500"></span>
+              <span>Sleep/Rest</span>
+              <span class="w-2.5 border-t-2 border-dashed border-indigo-600"></span>
+              <strong id="trendAvgRestBadge" class="font-semibold tabular-nums">Avg: 0 Hours</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50/80 text-amber-800 border border-amber-200/70">
+              <span class="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>
+              <span>Activities</span>
+              <span class="w-2.5 border-t-2 border-dashed border-amber-600"></span>
+              <strong id="trendAvgActBadge" class="font-semibold tabular-nums">Avg: 0 Minutes</strong>
+            </span>
+          </div>
+        </div>
+        <div class="relative w-full">
+          <div id="trendsScrollWrapper" class="w-full overflow-x-auto custom-scrollbar pb-1">
+            <div id="trendsInnerContainer" class="relative h-64 sm:h-72 min-w-full">
+              <canvas id="trendsCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+            </div>
+          </div>
+          <div id="chartTooltip" class="hidden absolute z-20 pointer-events-none bg-slate-900/95 text-white px-3 py-2.5 rounded-xl shadow-lg border border-slate-700/80"></div>
+        </div>
+      </section>
+
+      <!-- MEAL PORTION BREAKDOWN GROUPED CHART -->
+      <section class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Meal Portion Breakdown</h3>
+          </div>
+          <span id="netEnergyBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 self-start sm:self-auto">
+            Avg: 0 portions/day
+          </span>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2 text-xs font-medium text-slate-600 mb-3">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50/80 text-amber-800 border border-amber-200/70">
+            <span class="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>
+            <span>Carbs</span>
+            <span class="w-2.5 border-t-2 border-dashed border-amber-600"></span>
+            <strong id="macroAvgCarbsBadge" class="font-semibold tabular-nums">Avg: 0</strong>
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50/80 text-rose-800 border border-rose-200/70">
+            <span class="w-2.5 h-2.5 rounded-xs bg-rose-500"></span>
+            <span>Protein/Meat</span>
+            <span class="w-2.5 border-t-2 border-dashed border-rose-600"></span>
+            <strong id="macroAvgProteinBadge" class="font-semibold tabular-nums">Avg: 0</strong>
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 text-emerald-800 border border-emerald-200/70">
+            <span class="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>
+            <span>Vegetables/Fruits</span>
+            <span class="w-2.5 border-t-2 border-dashed border-emerald-600"></span>
+            <strong id="macroAvgVeggiesBadge" class="font-semibold tabular-nums">Avg: 0</strong>
+          </span>
+        </div>
+        <div class="relative w-full">
+          <div id="energyScrollWrapper" class="w-full overflow-x-auto custom-scrollbar pb-1">
+            <div id="energyInnerContainer" class="relative h-60 sm:h-64 min-w-full">
+              <canvas id="energyCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+            </div>
+          </div>
+          <div id="energyTooltip" class="hidden absolute z-20 pointer-events-none bg-slate-900/95 text-white px-3 py-2.5 rounded-xl shadow-lg border border-slate-700/80"></div>
+        </div>
+      </section>
+
+      <!-- WELL/UNWELL MONTHLY CALENDAR & YEAR-TO-DATE TRACKER -->
+      <section class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <h3 class="text-base font-bold text-slate-900">Well/Unwell Calendar</h3>
+            <span id="ytdUnwellCountBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/80">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span id="ytdUnwellCountText">0 days unwell YTD</span>
+            </span>
+          </div>
+
+          <!-- Month Switcher Controls -->
+          <div class="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              id="calTodayBtn"
+              onclick="resetCalendarToToday()"
+              class="hidden px-2.5 py-1.5 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-100/80 transition"
+            >
+              Today
+            </button>
+            <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/70">
+              <button
+                type="button"
+                onclick="changeCalendarMonth(-1)"
+                class="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition"
+                aria-label="Previous Month"
+                title="Previous Month"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <span id="calendarMonthLabel" class="px-3 py-1 text-xs sm:text-sm font-semibold text-slate-800 min-w-[130px] text-center">
+                Month Year
+              </span>
+              <button
+                type="button"
+                onclick="changeCalendarMonth(1)"
+                class="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition"
+                aria-label="Next Month"
+                title="Next Month"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekday Column Headers -->
+        <div class="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Sun</div>
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Mon</div>
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Tue</div>
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Wed</div>
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Thu</div>
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Fri</div>
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-1">Sat</div>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div id="unwellCalendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Legend & Selected Date Summary -->
+        <div class="mt-4 pt-3.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="flex items-center flex-wrap gap-4 text-xs text-slate-500">
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
+              <span>Feeling Unwell</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full ring-2 ring-emerald-500 bg-white inline-block"></span>
+              <span>Today</span>
+            </span>
+          </div>
+          <div id="calendarSelectedDayInfo" class="text-xs text-slate-600 flex items-center flex-wrap gap-2">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </section>
+
+    </div><!-- End #statisticsPage -->
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST NOTIFICATION CONTAINER                                          -->
+  <!-- ===================================================================== -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] sm:w-auto pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION LOGIC                                                     -->
+  <!-- ===================================================================== -->
+  <script>
+    /**
+     * Escape HTML special characters to prevent XSS
+     */
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * Date, Time & ID Utility Functions
+     */
+    function getTodayStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseStrToDate(dateStr) {
+      const [y, m, d] = String(dateStr).split('-').map(Number);
+      return new Date(y, (m || 1) - 1, d || 1);
+    }
+
+    function getOffsetDateStr(dateStr, offsetDays) {
+      const dt = parseStrToDate(dateStr);
+      dt.setDate(dt.getDate() + offsetDays);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const d = String(dt.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatHumanDate(dateStr) {
+      const today = getTodayStr();
+      if (dateStr === today) return 'Today';
+      if (dateStr === getOffsetDateStr(today, -1)) return 'Yesterday';
+      if (dateStr === getOffsetDateStr(today, 1)) return 'Tomorrow';
+      const dt = parseStrToDate(dateStr);
+      return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    function getCurrentTimeStr() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    function timeStrToMinutes(timeStr) {
+      if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return null;
+      const [hh, mm] = timeStr.split(':').map(Number);
+      if (Number.isNaN(hh) || Number.isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+      return hh * 60 + mm;
+    }
+
+    function minutesToTimeStr(totalMinutes) {
+      const wrapped = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
+      const hh = String(Math.floor(wrapped / 60)).padStart(2, '0');
+      const mm = String(wrapped % 60).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    function generateId() {
+      return `pt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    /**
+     * Application Constants & State
+     */
+    const STORAGE_KEY = 'simplewellnesstracker_v1_1_entries';
+
+    const PORTION_VALUES = {
+      '1/4': 0.25,
+      '1/3': 1 / 3,
+      '1/2': 0.5,
+      '1': 1.0,
+    };
+
+    function getFoodEntrySubPortions(e) {
+      const c = e.carbs && e.carbsPortion ? (PORTION_VALUES[e.carbsPortion] || 0.5) : 0;
+      const p = e.protein && e.proteinPortion ? (PORTION_VALUES[e.proteinPortion] || 0.5) : 0;
+      const v = e.veggiesFruits && e.veggiesPortion ? (PORTION_VALUES[e.veggiesPortion] || 0.5) : 0;
+      return {
+        carbs: c,
+        protein: p,
+        veggies: v,
+        total: c + p + v,
+      };
+    }
+
+    function formatPortionNumber(val) {
+      if (!val || Number.isNaN(val)) return '0';
+      const rounded = Math.round(val * 100) / 100;
+      return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(2);
+    }
+
+    let undoBuffer = null;
+    const initialToday = parseStrToDate(getTodayStr());
+
+    let state = {
+      currentPage: 'entry',
+      selectedDate: getTodayStr(),
+      activeTab: 'food',
+      editingEntryId: null,
+      selectedMealType: 'Lunch',
+      selectedRestQuality: 4,
+      selectedActivityIntensity: 'Moderate',
+      selectedWellStatus: 'well',
+      timelineFilter: 'all',
+      statsDays: 7,
+      calendarYear: initialToday.getFullYear(),
+      calendarMonth: initialToday.getMonth(),
+      calendarSelectedDate: getTodayStr(),
+      hoveredChartDayIndex: -1,
+      hoveredEnergyDayIndex: -1,
+      restCalcHistory: ['start', 'duration'],
+      actCalcHistory: ['start', 'duration'],
+      entries: [],
+    };
+
+    /**
+     * LocalStorage Persistence & On-Demand Sample Data Builder
+     * Starts completely blank unless user has saved entries or clicks "Load Sample".
+     */
+    function loadStateFromStorage() {
+      state.entries = [];
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            state.entries = parsed;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load storage:', err);
+      }
+    }
+
+    function saveStateToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
+      } catch (err) {
+        console.error('Failed to save storage:', err);
+      }
+    }
+
+    function buildSampleEntries() {
+      state.entries = [];
+      const today = parseStrToDate(getTodayStr());
+      const carbOptions = ['1/2', '1', '1/2', '1/3', '1'];
+      const protOptions = ['1', '1', '1/2', '1', '1/2'];
+      const vegOptions = ['1/2', '1', '1', '1/2', '1'];
+
+      for (let i = 180; i >= 0; i--) {
+        const dt = new Date(today);
+        dt.setDate(dt.getDate() - i);
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${d}`;
+        const vIdx = i % 5;
+
+        // Sample Breakfast
+        state.entries.push({
+          id: generateId(),
+          date: dateStr,
+          category: 'food',
+          mealType: 'Breakfast',
+          carbs: 'Oatmeal',
+          carbsPortion: carbOptions[vIdx],
+          protein: 'Eggs',
+          proteinPortion: protOptions[(vIdx + 1) % 5],
+          veggiesFruits: 'Berries',
+          veggiesPortion: '1/2',
+          notes: 'Morning fuel',
+          time: '08:00',
+        });
+
+        // Sample Lunch
+        state.entries.push({
+          id: generateId(),
+          date: dateStr,
+          category: 'food',
+          mealType: 'Lunch',
+          carbs: 'Brown Rice',
+          carbsPortion: carbOptions[(vIdx + 2) % 5],
+          protein: 'Grilled Chicken',
+          proteinPortion: protOptions[vIdx],
+          veggiesFruits: 'Broccoli & Mixed Greens',
+          veggiesPortion: vegOptions[vIdx],
+          notes: 'Balanced meal',
+          time: '13:00',
+        });
+
+        // Sample Drinks
+        state.entries.push({
+          id: generateId(),
+          date: dateStr,
+          category: 'drinks',
+          volume: 750 + (vIdx * 150),
+          notes: 'Morning hydration',
+          time: '09:30',
+        });
+        state.entries.push({
+          id: generateId(),
+          date: dateStr,
+          category: 'drinks',
+          volume: 900 + ((4 - vIdx) * 150),
+          notes: 'Afternoon water',
+          time: '15:00',
+        });
+
+        // Sample Sleep/Rest
+        const sleepHrs = Number((6.5 + (vIdx * 0.5)).toFixed(1));
+        state.entries.push({
+          id: generateId(),
+          date: dateStr,
+          category: 'rest',
+          startTime: '23:00',
+          endTime: minutesToTimeStr(23 * 60 + Math.round(sleepHrs * 60)),
+          duration: sleepHrs,
+          quality: Math.min(5, Math.max(3, 3 + (vIdx % 3))),
+          notes: 'Overnight sleep',
+          time: '07:00',
+        });
+
+        // Sample Activities
+        const actMins = 30 + (vIdx * 10);
+        state.entries.push({
+          id: generateId(),
+          date: dateStr,
+          category: 'activities',
+          activityName: vIdx % 2 === 0 ? 'Brisk Walking' : 'Cycling',
+          startTime: '17:30',
+          endTime: minutesToTimeStr(17 * 60 + 30 + actMins),
+          duration: actMins,
+          intensity: vIdx % 3 === 0 ? 'Vigorous' : 'Moderate',
+          notes: 'Daily movement session',
+          time: '17:30',
+        });
+
+        // Sample Well/Unwell status across the year for calendar & chart demonstration
+        if (i === 2 || i === 19 || i === 46) {
+          state.entries.push({
+            id: generateId(),
+            date: dateStr,
+            category: 'wellbeing',
+            status: 'unwell',
+            startTime: '09:00',
+            endTime: '18:30',
+            notes: i === 2 ? 'Mild fatigue and headache' : (i === 19 ? 'Seasonal cold symptoms' : 'Low energy & sore throat'),
+            time: '09:00',
+          });
+        } else if (i === 0) {
+          state.entries.push({
+            id: generateId(),
+            date: dateStr,
+            category: 'wellbeing',
+            status: 'well',
+            startTime: '08:00',
+            endTime: '20:00',
+            notes: 'Feeling energetic',
+            time: '08:00',
+          });
+        }
+      }
+      saveStateToStorage();
+    }
+
+    /**
+     * Navigation, Master Render & Date Controls
+     */
+    function switchPage(page) {
+      state.currentPage = page;
+      renderAll();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderPageNav() {
+      const entryBtn = document.getElementById('navEntryBtn');
+      const statsBtn = document.getElementById('navStatsBtn');
+      const entryPage = document.getElementById('entryPage');
+      const statsPage = document.getElementById('statisticsPage');
+
+      if (state.currentPage === 'entry') {
+        if (entryBtn) entryBtn.className = 'flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-emerald-700 shadow-2xs border border-slate-200/60 transition';
+        if (statsBtn) statsBtn.className = 'flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition';
+        if (entryPage) entryPage.classList.remove('hidden');
+        if (statsPage) statsPage.classList.add('hidden');
+      } else {
+        if (entryBtn) entryBtn.className = 'flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition';
+        if (statsBtn) statsBtn.className = 'flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-emerald-700 shadow-2xs border border-slate-200/60 transition';
+        if (entryPage) entryPage.classList.add('hidden');
+        if (statsPage) statsPage.classList.remove('hidden');
+        setStatsTimeframe(state.statsDays);
+      }
+    }
+
+    function renderAll() {
+      renderPageNav();
+
+      const dateLabel = document.getElementById('currentDateLabel');
+      const datePicker = document.getElementById('entryDatePicker');
+      const jumpPill = document.getElementById('jumpTodayPill');
+      const humanLabel = formatHumanDate(state.selectedDate);
+
+      if (dateLabel) dateLabel.textContent = humanLabel;
+      if (datePicker) datePicker.value = state.selectedDate;
+
+      if (jumpPill) {
+        if (state.selectedDate === getTodayStr()) {
+          jumpPill.classList.add('hidden');
+        } else {
+          jumpPill.classList.remove('hidden');
+        }
+      }
+
+      renderTimeline();
+
+      if (state.currentPage === 'statistics') {
+        renderStatisticsPage(false);
+      }
+    }
+
+    function changeDate(deltaDays) {
+      if (state.editingEntryId) cancelEditEntry(true);
+      state.selectedDate = getOffsetDateStr(state.selectedDate, deltaDays);
+      renderAll();
+    }
+
+    function jumpToToday() {
+      if (state.editingEntryId) cancelEditEntry(true);
+      state.selectedDate = getTodayStr();
+      renderAll();
+    }
+
+    function handleDatePickerChange(val) {
+      if (val) {
+        if (state.editingEntryId) cancelEditEntry(true);
+        state.selectedDate = val;
+        renderAll();
+      }
+    }
+
+    function selectCategoryTab(tabName, isPopulatingEdit = false) {
+      if (!isPopulatingEdit && state.editingEntryId) {
+        cancelEditEntry(true);
+      }
+      state.activeTab = tabName;
+      document.querySelectorAll('.category-tab').forEach(btn => {
+        const isCurrent = btn.getAttribute('data-tab') === tabName;
+        if (isCurrent) {
+          btn.className = 'category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-2xs border border-slate-200/60 transition whitespace-nowrap';
+        } else {
+          btn.className = 'category-tab flex-auto flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 border border-transparent transition whitespace-nowrap';
+        }
+      });
+      renderDynamicForm(tabName);
+      updateEditModeUI();
+    }
+
+    /**
+     * Dynamic Form Renderer
+     */
+    function renderDynamicForm(tab) {
+      const container = document.getElementById('dynamicFormFields');
+      const submitText = document.getElementById('submitBtnText');
+      const submitBtn = document.getElementById('submitEntryBtn');
+      if (!container || !submitText) return;
+
+      if (submitBtn) {
+        submitBtn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] transition shadow-xs flex items-center justify-center gap-2';
+      }
+
+      let html = '';
+
+      if (tab === 'food') {
+        submitText.textContent = 'Add Food Entry';
+        const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+        html += `
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Meal Type</label>
+            <div class="grid grid-cols-4 gap-1.5">
+              ${mealTypes.map(m => `
+                <button
+                  type="button"
+                  onclick="setFoodMealType('${m}')"
+                  class="py-1.5 px-2 rounded-lg text-xs font-semibold transition border ${state.selectedMealType === m ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}"
+                >
+                  ${m}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-1 border-t border-slate-100">
+            <!-- Carbohydrates -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+              <div class="sm:col-span-6">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Carbohydrates</label>
+                <input
+                  type="text"
+                  id="foodCarbs"
+                  placeholder="e.g. Rice, Oats, Bread"
+                  class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                />
+              </div>
+              <div class="sm:col-span-6">
+                <label for="foodCarbsPortion" class="block text-[11px] font-semibold text-slate-600 mb-1 whitespace-nowrap">Portion Size (Per Plate/Bowl)</label>
+                <select
+                  id="foodCarbsPortion"
+                  class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                >
+                  <option value="1/4">1/4</option>
+                  <option value="1/3">1/3</option>
+                  <option value="1/2" selected>1/2</option>
+                  <option value="1">1</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Protein / Meat -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+              <div class="sm:col-span-6">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Protein/Meat</label>
+                <input
+                  type="text"
+                  id="foodProtein"
+                  placeholder="e.g. Chicken, Tofu, Eggs"
+                  class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                />
+              </div>
+              <div class="sm:col-span-6">
+                <label for="foodProteinPortion" class="block text-[11px] font-semibold text-slate-600 mb-1 whitespace-nowrap">Portion Size (Per Plate/Bowl)</label>
+                <select
+                  id="foodProteinPortion"
+                  class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                >
+                  <option value="1/4">1/4</option>
+                  <option value="1/3">1/3</option>
+                  <option value="1/2" selected>1/2</option>
+                  <option value="1">1</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Vegetables / Fruits -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+              <div class="sm:col-span-6">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Vegetables/Fruits</label>
+                <input
+                  type="text"
+                  id="foodVeggies"
+                  placeholder="e.g. Broccoli, Apple, Salad"
+                  class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                />
+              </div>
+              <div class="sm:col-span-6">
+                <label for="foodVeggiesPortion" class="block text-[11px] font-semibold text-slate-600 mb-1 whitespace-nowrap">Portion Size (Per Plate/Bowl)</label>
+                <select
+                  id="foodVeggiesPortion"
+                  class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                >
+                  <option value="1/4">1/4</option>
+                  <option value="1/3">1/3</option>
+                  <option value="1/2" selected>1/2</option>
+                  <option value="1">1</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Notes (Optional)</label>
+              <input
+                type="text"
+                id="foodNotes"
+                placeholder="Optional notes"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Time</label>
+              <input
+                type="time"
+                id="foodTime"
+                value="${getCurrentTimeStr()}"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              />
+            </div>
+          </div>
+        `;
+      } else if (tab === 'drinks') {
+        submitText.textContent = 'Add Drink Entry';
+        html += `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Volume (mL)</label>
+              <input
+                type="number"
+                id="drinkVolume"
+                min="50"
+                step="50"
+                value="250"
+                required
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Time</label>
+              <input
+                type="time"
+                id="drinkTime"
+                value="${getCurrentTimeStr()}"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Notes (Optional)</label>
+            <input
+              type="text"
+              id="drinkNotes"
+              placeholder="e.g. Electrolytes added"
+              class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+            />
+          </div>
+        `;
+      } else if (tab === 'rest') {
+        state.restCalcHistory = ['start', 'duration'];
+        submitText.textContent = 'Add Sleep/Rest Entry';
+        html += `
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Start Time</label>
+              <input
+                type="time"
+                id="restStartTime"
+                value="23:00"
+                oninput="syncTimeDurationFields('rest', 'start')"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">End Time</label>
+              <input
+                type="time"
+                id="restEndTime"
+                value="07:00"
+                oninput="syncTimeDurationFields('rest', 'end')"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Duration (Hours)</label>
+              <input
+                type="number"
+                id="restDuration"
+                min="0.25"
+                max="24"
+                step="0.25"
+                value="8"
+                oninput="syncTimeDurationFields('rest', 'duration')"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Sleep/Rest Quality (1–5)</label>
+            <div class="grid grid-cols-5 gap-2">
+              ${[1, 2, 3, 4, 5].map(q => `
+                <button
+                  type="button"
+                  onclick="setRestQuality(${q})"
+                  id="restQualityBtn_${q}"
+                  class="py-2 rounded-xl text-xs font-bold transition border ${state.selectedRestQuality === q ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}"
+                >
+                  ${q}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Notes (Optional)</label>
+            <input
+              type="text"
+              id="restNotes"
+              placeholder="e.g. Deep REM sleep, woke up once"
+              class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            />
+          </div>
+        `;
+      } else if (tab === 'activities') {
+        state.actCalcHistory = ['start', 'duration'];
+        submitText.textContent = 'Add Activity Entry';
+        html += `
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Activity</label>
+            <input
+              type="text"
+              id="activityNameInput"
+              placeholder="e.g. Running, Yoga, Cycling"
+              required
+              class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Start Time</label>
+              <input
+                type="time"
+                id="actStartTime"
+                value="07:30"
+                oninput="syncTimeDurationFields('activity', 'start')"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">End Time</label>
+              <input
+                type="time"
+                id="actEndTime"
+                value="08:15"
+                oninput="syncTimeDurationFields('activity', 'end')"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Duration (Minutes)</label>
+              <input
+                type="number"
+                id="actDuration"
+                min="1"
+                max="1440"
+                value="45"
+                oninput="syncTimeDurationFields('activity', 'duration')"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Intensity</label>
+            <div class="grid grid-cols-3 gap-2">
+              ${['Light', 'Moderate', 'Vigorous'].map(int => `
+                <button
+                  type="button"
+                  onclick="setActivityIntensity('${int}')"
+                  id="actIntensityBtn_${int}"
+                  class="py-2 rounded-xl text-xs font-semibold transition border ${state.selectedActivityIntensity === int ? 'bg-amber-600 text-white border-amber-600 shadow-2xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}"
+                >
+                  ${int}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Notes (Optional)</label>
+            <input
+              type="text"
+              id="actNotes"
+              placeholder="e.g. Morning cardio session"
+              class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+            />
+          </div>
+        `;
+      } else if (tab === 'wellbeing') {
+        const isUnwell = state.selectedWellStatus === 'unwell';
+        submitText.textContent = 'Add Well/Unwell Entry';
+        if (submitBtn && isUnwell) {
+          submitBtn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.99] transition shadow-xs flex items-center justify-center gap-2';
+        }
+        html += `
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-2">How are you feeling?</label>
+            <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <button
+                type="button"
+                onclick="setWellStatus('well')"
+                class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition border ${!isUnwell ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}"
+              >
+                Well
+              </button>
+
+              <!-- Interactive Pill Toggle Switch -->
+              <button
+                type="button"
+                role="switch"
+                aria-checked="${isUnwell}"
+                aria-label="Toggle Well or Unwell"
+                onclick="toggleWellStatus()"
+                class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 ${isUnwell ? 'bg-rose-500 focus:ring-rose-500/40' : 'bg-emerald-500 focus:ring-emerald-500/40'}"
+                style="width: 3.25rem;"
+              >
+                <span
+                  class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${isUnwell ? 'translate-x-6' : 'translate-x-0'}"
+                ></span>
+              </button>
+
+              <button
+                type="button"
+                onclick="setWellStatus('unwell')"
+                class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition border flex items-center justify-center gap-1.5 ${isUnwell ? 'bg-rose-600 text-white border-rose-600 shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}"
+              >
+                <span>Unwell</span>
+                <span class="w-2 h-2 rounded-full ${isUnwell ? 'bg-white' : 'bg-rose-500'}"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Start Time</label>
+              <input
+                type="time"
+                id="wellStartTime"
+                value="08:00"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">End Time</label>
+              <input
+                type="time"
+                id="wellEndTime"
+                value="20:00"
+                class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Notes (Optional)</label>
+            <input
+              type="text"
+              id="wellNotes"
+              placeholder="e.g. Symptoms, energy level, recovery notes"
+              class="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+            />
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function setWellStatus(status) {
+      const startVal = document.getElementById('wellStartTime')?.value;
+      const endVal = document.getElementById('wellEndTime')?.value;
+      const notesVal = document.getElementById('wellNotes')?.value;
+      state.selectedWellStatus = status;
+      renderDynamicForm('wellbeing');
+      updateEditModeUI();
+      if (startVal && document.getElementById('wellStartTime')) document.getElementById('wellStartTime').value = startVal;
+      if (endVal && document.getElementById('wellEndTime')) document.getElementById('wellEndTime').value = endVal;
+      if (notesVal !== undefined && document.getElementById('wellNotes')) document.getElementById('wellNotes').value = notesVal;
+    }
+
+    function toggleWellStatus() {
+      setWellStatus(state.selectedWellStatus === 'well' ? 'unwell' : 'well');
+    }
+
+    function setFoodMealType(m) {
+      const carbs = document.getElementById('foodCarbs')?.value;
+      const carbsP = document.getElementById('foodCarbsPortion')?.value;
+      const prot = document.getElementById('foodProtein')?.value;
+      const protP = document.getElementById('foodProteinPortion')?.value;
+      const veg = document.getElementById('foodVeggies')?.value;
+      const vegP = document.getElementById('foodVeggiesPortion')?.value;
+      const notes = document.getElementById('foodNotes')?.value;
+      const time = document.getElementById('foodTime')?.value;
+
+      state.selectedMealType = m;
+      renderDynamicForm('food');
+      updateEditModeUI();
+
+      if (carbs !== undefined && document.getElementById('foodCarbs')) document.getElementById('foodCarbs').value = carbs;
+      if (carbsP && document.getElementById('foodCarbsPortion')) document.getElementById('foodCarbsPortion').value = carbsP;
+      if (prot !== undefined && document.getElementById('foodProtein')) document.getElementById('foodProtein').value = prot;
+      if (protP && document.getElementById('foodProteinPortion')) document.getElementById('foodProteinPortion').value = protP;
+      if (veg !== undefined && document.getElementById('foodVeggies')) document.getElementById('foodVeggies').value = veg;
+      if (vegP && document.getElementById('foodVeggiesPortion')) document.getElementById('foodVeggiesPortion').value = vegP;
+      if (notes !== undefined && document.getElementById('foodNotes')) document.getElementById('foodNotes').value = notes;
+      if (time && document.getElementById('foodTime')) document.getElementById('foodTime').value = time;
+    }
+
+    function setRestQuality(q) {
+      state.selectedRestQuality = q;
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById(`restQualityBtn_${i}`);
+        if (btn) {
+          if (i === q) {
+            btn.className = 'py-2 rounded-xl text-xs font-bold transition border bg-indigo-600 text-white border-indigo-600 shadow-2xs';
+          } else {
+            btn.className = 'py-2 rounded-xl text-xs font-bold transition border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+          }
+        }
+      }
+    }
+
+    function setActivityIntensity(int) {
+      state.selectedActivityIntensity = int;
+      ['Light', 'Moderate', 'Vigorous'].forEach(i => {
+        const btn = document.getElementById(`actIntensityBtn_${i}`);
+        if (btn) {
+          if (i === int) {
+            btn.className = 'py-2 rounded-xl text-xs font-semibold transition border bg-amber-600 text-white border-amber-600 shadow-2xs';
+          } else {
+            btn.className = 'py-2 rounded-xl text-xs font-semibold transition border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+          }
+        }
+      });
+    }
+
+    /**
+     * 3-Way Time/Duration Sync Helper:
+     * - Start Time + Duration -> calculates End Time
+     * - Start Time + End Time -> calculates Duration
+     * - End Time + Duration -> calculates Start Time
+     */
+    function syncTimeDurationFields(prefix, changedField) {
+      const startEl = document.getElementById(prefix === 'rest' ? 'restStartTime' : 'actStartTime');
+      const endEl = document.getElementById(prefix === 'rest' ? 'restEndTime' : 'actEndTime');
+      const durEl = document.getElementById(prefix === 'rest' ? 'restDuration' : 'actDuration');
+      if (!startEl || !endEl || !durEl) return;
+
+      const histKey = prefix === 'rest' ? 'restCalcHistory' : 'actCalcHistory';
+      const prevEdited = state[histKey].filter(f => f !== changedField);
+      const otherField = prevEdited[prevEdited.length - 1] || (changedField === 'start' ? 'duration' : 'start');
+      state[histKey] = [otherField, changedField];
+
+      const startMins = timeStrToMinutes(startEl.value);
+      const endMins = timeStrToMinutes(endEl.value);
+      const durVal = parseFloat(durEl.value);
+      const durMins = !Number.isNaN(durVal) && durVal > 0
+        ? (prefix === 'rest' ? Math.round(durVal * 60) : Math.round(durVal))
+        : null;
+
+      const activePair = new Set([changedField, otherField]);
+
+      if (activePair.has('start') && activePair.has('duration') && startMins !== null && durMins !== null) {
+        endEl.value = minutesToTimeStr(startMins + durMins);
+      } else if (activePair.has('start') && activePair.has('end') && startMins !== null && endMins !== null) {
+        let diff = endMins - startMins;
+        if (diff < 0) diff += 1440;
+        durEl.value = prefix === 'rest' ? Number((diff / 60).toFixed(2)) : diff;
+      } else if (activePair.has('end') && activePair.has('duration') && endMins !== null && durMins !== null) {
+        startEl.value = minutesToTimeStr(endMins - durMins);
+      }
+    }
+
+    /**
+     * Edit Mode Helpers for Daily Timeline Entries
+     */
+    function updateEditModeUI() {
+      const panel = document.getElementById('logEntryPanel');
+      const panelTitle = document.getElementById('logEntryPanelTitle');
+      const banner = document.getElementById('editModeBanner');
+      const bannerText = document.getElementById('editModeBannerText');
+      const submitText = document.getElementById('submitBtnText');
+
+      const categoryNames = {
+        food: 'Food',
+        drinks: 'Drink',
+        rest: 'Sleep/Rest',
+        activities: 'Activity',
+        wellbeing: 'Well/Unwell',
+      };
+
+      if (state.editingEntryId) {
+        if (panel) panel.classList.add('ring-2', 'ring-amber-400/70', 'border-amber-300');
+        if (panelTitle) panelTitle.textContent = 'Edit Wellness Entry';
+        if (banner) banner.classList.remove('hidden');
+        if (bannerText) bannerText.textContent = `Editing ${categoryNames[state.activeTab] || ''} entry`;
+        if (submitText) submitText.textContent = 'Save Changes';
+      } else {
+        if (panel) panel.classList.remove('ring-2', 'ring-amber-400/70', 'border-amber-300');
+        if (panelTitle) panelTitle.textContent = 'Log Wellness Entry';
+        if (banner) banner.classList.add('hidden');
+        if (submitText) submitText.textContent = `Add ${categoryNames[state.activeTab] || ''} Entry`;
+      }
+    }
+
+    function startEditEntry(id) {
+      const entry = state.entries.find(e => e.id === id);
+      if (!entry) return;
+
+      state.editingEntryId = id;
+
+      if (entry.category === 'food') {
+        state.selectedMealType = entry.mealType || 'Lunch';
+      } else if (entry.category === 'rest') {
+        state.selectedRestQuality = entry.quality || 4;
+      } else if (entry.category === 'activities') {
+        state.selectedActivityIntensity = entry.intensity || 'Moderate';
+      } else if (entry.category === 'wellbeing') {
+        state.selectedWellStatus = entry.status || 'well';
+      }
+
+      selectCategoryTab(entry.category, true);
+
+      if (entry.category === 'food') {
+        if (document.getElementById('foodCarbs')) document.getElementById('foodCarbs').value = entry.carbs || '';
+        if (document.getElementById('foodCarbsPortion')) document.getElementById('foodCarbsPortion').value = entry.carbsPortion || '1/2';
+        if (document.getElementById('foodProtein')) document.getElementById('foodProtein').value = entry.protein || '';
+        if (document.getElementById('foodProteinPortion')) document.getElementById('foodProteinPortion').value = entry.proteinPortion || '1/2';
+        if (document.getElementById('foodVeggies')) document.getElementById('foodVeggies').value = entry.veggiesFruits || '';
+        if (document.getElementById('foodVeggiesPortion')) document.getElementById('foodVeggiesPortion').value = entry.veggiesPortion || '1/2';
+        if (document.getElementById('foodNotes')) document.getElementById('foodNotes').value = entry.notes || '';
+        if (document.getElementById('foodTime')) document.getElementById('foodTime').value = entry.time || getCurrentTimeStr();
+      } else if (entry.category === 'drinks') {
+        if (document.getElementById('drinkVolume')) document.getElementById('drinkVolume').value = entry.volume || 250;
+        if (document.getElementById('drinkTime')) document.getElementById('drinkTime').value = entry.time || getCurrentTimeStr();
+        if (document.getElementById('drinkNotes')) document.getElementById('drinkNotes').value = entry.notes || '';
+      } else if (entry.category === 'rest') {
+        if (document.getElementById('restStartTime')) document.getElementById('restStartTime').value = entry.startTime || '23:00';
+        if (document.getElementById('restEndTime')) document.getElementById('restEndTime').value = entry.endTime || '07:00';
+        if (document.getElementById('restDuration')) document.getElementById('restDuration').value = entry.duration || 8;
+        if (document.getElementById('restNotes')) document.getElementById('restNotes').value = entry.notes || '';
+      } else if (entry.category === 'activities') {
+        if (document.getElementById('activityNameInput')) document.getElementById('activityNameInput').value = entry.activityName || '';
+        if (document.getElementById('actStartTime')) document.getElementById('actStartTime').value = entry.startTime || '07:30';
+        if (document.getElementById('actEndTime')) document.getElementById('actEndTime').value = entry.endTime || '08:15';
+        if (document.getElementById('actDuration')) document.getElementById('actDuration').value = entry.duration || 45;
+        if (document.getElementById('actNotes')) document.getElementById('actNotes').value = entry.notes || '';
+      } else if (entry.category === 'wellbeing') {
+        if (document.getElementById('wellStartTime')) document.getElementById('wellStartTime').value = entry.startTime || '08:00';
+        if (document.getElementById('wellEndTime')) document.getElementById('wellEndTime').value = entry.endTime || '20:00';
+        if (document.getElementById('wellNotes')) document.getElementById('wellNotes').value = entry.notes || '';
+      }
+
+      renderTimeline();
+
+      const panel = document.getElementById('logEntryPanel');
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function cancelEditEntry(skipRender = false) {
+      state.editingEntryId = null;
+      if (!skipRender) {
+        renderDynamicForm(state.activeTab);
+        updateEditModeUI();
+        renderTimeline();
+      } else {
+        updateEditModeUI();
+      }
+    }
+
+    /**
+     * Form Submission Handler
+     */
+    function handleCustomFormSubmit(e) {
+      e.preventDefault();
+      const tab = state.activeTab;
+      const isEditing = Boolean(state.editingEntryId);
+      const existingEntry = isEditing ? state.entries.find(item => item.id === state.editingEntryId) : null;
+
+      let entryData = {
+        id: existingEntry ? existingEntry.id : generateId(),
+        date: existingEntry ? existingEntry.date : state.selectedDate,
+        category: tab,
+      };
+
+      if (tab === 'food') {
+        entryData.mealType = state.selectedMealType;
+        entryData.carbs = document.getElementById('foodCarbs')?.value.trim() || '';
+        entryData.carbsPortion = document.getElementById('foodCarbsPortion')?.value || '1/2';
+        entryData.protein = document.getElementById('foodProtein')?.value.trim() || '';
+        entryData.proteinPortion = document.getElementById('foodProteinPortion')?.value || '1/2';
+        entryData.veggiesFruits = document.getElementById('foodVeggies')?.value.trim() || '';
+        entryData.veggiesPortion = document.getElementById('foodVeggiesPortion')?.value || '1/2';
+        entryData.notes = document.getElementById('foodNotes')?.value.trim() || '';
+        entryData.time = document.getElementById('foodTime')?.value || getCurrentTimeStr();
+      } else if (tab === 'drinks') {
+        entryData.volume = parseFloat(document.getElementById('drinkVolume')?.value) || 250;
+        entryData.notes = document.getElementById('drinkNotes')?.value.trim() || '';
+        entryData.time = document.getElementById('drinkTime')?.value || getCurrentTimeStr();
+      } else if (tab === 'rest') {
+        entryData.startTime = document.getElementById('restStartTime')?.value || '23:00';
+        entryData.endTime = document.getElementById('restEndTime')?.value || '07:00';
+        entryData.duration = parseFloat(document.getElementById('restDuration')?.value) || 8;
+        entryData.quality = state.selectedRestQuality;
+        entryData.notes = document.getElementById('restNotes')?.value.trim() || '';
+        entryData.time = entryData.endTime;
+      } else if (tab === 'activities') {
+        entryData.activityName = document.getElementById('activityNameInput')?.value.trim() || 'Activity';
+        entryData.startTime = document.getElementById('actStartTime')?.value || '07:30';
+        entryData.endTime = document.getElementById('actEndTime')?.value || '08:15';
+        entryData.duration = parseFloat(document.getElementById('actDuration')?.value) || 45;
+        entryData.intensity = state.selectedActivityIntensity;
+        entryData.notes = document.getElementById('actNotes')?.value.trim() || '';
+        entryData.time = entryData.startTime;
+      } else if (tab === 'wellbeing') {
+        entryData.status = state.selectedWellStatus;
+        entryData.startTime = document.getElementById('wellStartTime')?.value || '08:00';
+        entryData.endTime = document.getElementById('wellEndTime')?.value || '20:00';
+        entryData.notes = document.getElementById('wellNotes')?.value.trim() || '';
+        entryData.time = entryData.startTime;
+      }
+
+      if (isEditing && existingEntry) {
+        const idx = state.entries.findIndex(item => item.id === existingEntry.id);
+        if (idx !== -1) {
+          state.entries[idx] = entryData;
+        }
+        state.editingEntryId = null;
+        saveStateToStorage();
+        renderDynamicForm(state.activeTab);
+        updateEditModeUI();
+        renderAll();
+        showToast('Entry updated!', 'success');
+      } else {
+        state.entries.unshift(entryData);
+        saveStateToStorage();
+        renderAll();
+        const labelMap = {
+          rest: 'Sleep/Rest',
+          wellbeing: `Well/Unwell (${entryData.status === 'unwell' ? 'Unwell' : 'Well'})`,
+        };
+        showToast(`Successfully logged ${labelMap[tab] || tab}!`, 'success');
+      }
+    }
+
+    /**
+     * Daily Timeline Filtering, Rendering, Deleting & Clearing
+     */
+    function setTimelineFilter(filter) {
+      state.timelineFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isCurrent = btn.getAttribute('data-filter') === filter;
+        if (isCurrent) {
+          btn.className = 'filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-2xs border border-slate-200/60 transition text-center whitespace-nowrap';
+        } else {
+          btn.className = 'filter-btn flex-auto py-2 px-2.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 border border-transparent transition text-center whitespace-nowrap';
+        }
+      });
+      renderTimeline();
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timelineContainer');
+      const countBadge = document.getElementById('timelineCountBadge');
+      if (!container) return;
+
+      const dayEntries = state.entries.filter(e => e.date === state.selectedDate);
+      const filtered = state.timelineFilter === 'all'
+        ? dayEntries
+        : dayEntries.filter(e => e.category === state.timelineFilter);
+
+      const sorted = [...filtered].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      if (countBadge) countBadge.textContent = String(sorted.length);
+
+      if (sorted.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+            <p class="text-sm font-semibold text-slate-700">No entries logged yet</p>
+            <p class="text-xs text-slate-500 mt-1">Use the form on the left to log your food, drinks, sleep/rest, activity, or well/unwell status.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = sorted.map(item => {
+        let borderColor = 'border-slate-200/80';
+        let badgeBg = 'bg-slate-100 text-slate-700';
+        let badgeLabel = item.category;
+        let title = '';
+        let detailsHtml = '';
+
+        if (item.category === 'food') {
+          borderColor = 'border-l-4 border-l-emerald-500 border-slate-200/80';
+          badgeBg = 'bg-emerald-50 text-emerald-700';
+          badgeLabel = item.mealType || 'Meal';
+          title = `${escapeHtml(item.mealType || 'Meal')} Log`;
+
+          const badges = [];
+          if (item.carbs) {
+            badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200/60 text-[11px] font-medium">Carbs: ${escapeHtml(item.carbs)} (${escapeHtml(item.carbsPortion || '1/2')})</span>`);
+          }
+          if (item.protein) {
+            badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200/60 text-[11px] font-medium">Protein: ${escapeHtml(item.protein)} (${escapeHtml(item.proteinPortion || '1/2')})</span>`);
+          }
+          if (item.veggiesFruits) {
+            badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/60 text-[11px] font-medium">Veg/Fruit: ${escapeHtml(item.veggiesFruits)} (${escapeHtml(item.veggiesPortion || '1/2')})</span>`);
+          }
+          detailsHtml = badges.length > 0 ? `<div class="flex flex-wrap gap-1.5 mt-1.5">${badges.join('')}</div>` : '';
+        } else if (item.category === 'drinks') {
+          borderColor = 'border-l-4 border-l-sky-500 border-slate-200/80';
+          badgeBg = 'bg-sky-50 text-sky-700';
+          badgeLabel = 'Drinks';
+          title = `${Math.round(Number(item.volume) || 0)} mL Hydration`;
+        } else if (item.category === 'rest') {
+          borderColor = 'border-l-4 border-l-indigo-500 border-slate-200/80';
+          badgeBg = 'bg-indigo-50 text-indigo-700';
+          badgeLabel = 'Sleep/Rest';
+          title = `${Number(item.duration || 0)} Hours Sleep/Rest`;
+          detailsHtml = `
+            <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-600">
+              <span>${escapeHtml(item.startTime || '')} – ${escapeHtml(item.endTime || '')}</span>
+              <span>•</span>
+              <span>Quality: <strong class="text-indigo-700">${escapeHtml(String(item.quality || 4))} / 5</strong></span>
+            </div>
+          `;
+        } else if (item.category === 'activities') {
+          borderColor = 'border-l-4 border-l-amber-500 border-slate-200/80';
+          badgeBg = 'bg-amber-50 text-amber-700';
+          badgeLabel = 'Activity';
+          title = `${escapeHtml(item.activityName || 'Activity')} (${Math.round(Number(item.duration) || 0)} Minutes)`;
+          detailsHtml = `
+            <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-600">
+              <span>${escapeHtml(item.startTime || '')} – ${escapeHtml(item.endTime || '')}</span>
+              <span>•</span>
+              <span>Intensity: <strong class="text-amber-700">${escapeHtml(item.intensity || 'Moderate')}</strong></span>
+            </div>
+          `;
+        } else if (item.category === 'wellbeing') {
+          const isUnwell = item.status === 'unwell';
+          borderColor = isUnwell
+            ? 'border-l-4 border-l-rose-500 border-slate-200/80'
+            : 'border-l-4 border-l-emerald-500 border-slate-200/80';
+          badgeBg = isUnwell ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700';
+          badgeLabel = 'Well/Unwell';
+          title = isUnwell
+            ? '<span class="inline-flex items-center gap-1.5 text-rose-700">Feeling Unwell <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span></span>'
+            : '<span class="text-emerald-700">Feeling Well</span>';
+          detailsHtml = `
+            <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-600">
+              <span>${escapeHtml(item.startTime || '')} – ${escapeHtml(item.endTime || '')}</span>
+            </div>
+          `;
+        }
+
+        const isBeingEdited = item.id === state.editingEntryId;
+
+        return `
+          <div class="group relative bg-white rounded-xl p-4 border ${borderColor} ${isBeingEdited ? 'ring-2 ring-amber-400 bg-amber-50/20' : ''} shadow-2xs hover:shadow-sm transition flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${badgeBg}">${badgeLabel}</span>
+                <span class="text-xs text-slate-400 font-medium">${escapeHtml(item.time || '')}</span>
+                ${isBeingEdited ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">Editing</span>' : ''}
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 truncate">${title}</h4>
+              ${detailsHtml}
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onclick="startEditEntry('${item.id}')"
+                class="opacity-70 group-hover:opacity-100 p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                title="Edit entry"
+                aria-label="Edit entry"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onclick="handleDeleteEntry('${item.id}')"
+                class="opacity-70 group-hover:opacity-100 p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                title="Delete entry"
+                aria-label="Delete entry"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleDeleteEntry(id) {
+      if (state.editingEntryId === id) {
+        cancelEditEntry(true);
+      }
+      const idx = state.entries.findIndex(e => e.id === id);
+      if (idx === -1) return;
+      const [removed] = state.entries.splice(idx, 1);
+      saveStateToStorage();
+      renderAll();
+
+      undoBuffer = { type: 'single', entry: removed, index: idx };
+      showToast('Entry deleted.', 'undo', () => {
+        if (undoBuffer && undoBuffer.type === 'single') {
+          state.entries.splice(undoBuffer.index, 0, undoBuffer.entry);
+          saveStateToStorage();
+          renderAll();
+          undoBuffer = null;
+        }
+      });
+    }
+
+    function handleClearDay() {
+      const targetDate = state.selectedDate;
+      const toRemove = state.entries.filter(e => e.date === targetDate);
+      if (toRemove.length === 0) {
+        showToast('No entries to clear for this day.', 'info');
+        return;
+      }
+      if (state.editingEntryId) {
+        cancelEditEntry(true);
+      }
+      state.entries = state.entries.filter(e => e.date !== targetDate);
+      saveStateToStorage();
+      renderAll();
+
+      undoBuffer = { type: 'day', entries: toRemove };
+      showToast(`Cleared ${toRemove.length} ${toRemove.length === 1 ? 'entry' : 'entries'}.`, 'undo', () => {
+        if (undoBuffer && undoBuffer.type === 'day') {
+          state.entries.push(...undoBuffer.entries);
+          saveStateToStorage();
+          renderAll();
+          undoBuffer = null;
+        }
+      });
+    }
+
+    /**
+     * Statistics Aggregation, Timeframe Switcher & Calendar
+     */
+    function setStatsTimeframe(days) {
+      state.statsDays = days;
+      [7, 14, 30, 180].forEach(d => {
+        const btn = document.getElementById(`tf${d}Btn`);
+        if (btn) {
+          if (d === days) {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-emerald-700 shadow-2xs border border-slate-200/60 transition';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition';
+          }
+        }
+      });
+      renderStatisticsPage(true);
+    }
+
+    function getDaySummary(dayEntries) {
+      let foodPortions = 0;
+      let carbsPortions = 0;
+      let proteinPortions = 0;
+      let veggiesPortions = 0;
+      let drinksMl = 0;
+      let restHours = 0;
+      let restQualityWeighted = 0;
+      let actMinutes = 0;
+      let isUnwell = false;
+
+      dayEntries.forEach(e => {
+        if (e.category === 'food') {
+          const subs = getFoodEntrySubPortions(e);
+          foodPortions += subs.total;
+          carbsPortions += subs.carbs;
+          proteinPortions += subs.protein;
+          veggiesPortions += subs.veggies;
+        } else if (e.category === 'drinks') {
+          drinksMl += Number(e.volume) || 0;
+        } else if (e.category === 'rest') {
+          const hrs = Number(e.duration) || 0;
+          restHours += hrs;
+          restQualityWeighted += (Number(e.quality) || 4) * hrs;
+        } else if (e.category === 'activities') {
+          actMinutes += Number(e.duration) || 0;
+        } else if (e.category === 'wellbeing' && e.status === 'unwell') {
+          isUnwell = true;
+        }
+      });
+
+      return {
+        foodPortions,
+        carbsPortions,
+        proteinPortions,
+        veggiesPortions,
+        drinksMl,
+        restHours,
+        avgRestQuality: restHours > 0 ? restQualityWeighted / restHours : 0,
+        actMinutes,
+        isUnwell,
+      };
+    }
+
+    function getPeriodDaysData(numDays) {
+      const today = getTodayStr();
+      const result = [];
+      for (let i = numDays - 1; i >= 0; i--) {
+        const dateStr = getOffsetDateStr(today, -i);
+        const dayEntries = state.entries.filter(e => e.date === dateStr);
+        result.push({
+          date: dateStr,
+          entries: dayEntries,
+          summary: getDaySummary(dayEntries),
+        });
+      }
+      return result;
+    }
+
+    function getChartBuckets(daysData, statsDays) {
+      if (statsDays === 180) {
+        const monthMap = new Map();
+        daysData.forEach(d => {
+          const monthKey = d.date.slice(0, 7);
+          if (!monthMap.has(monthKey)) {
+            monthMap.set(monthKey, []);
+          }
+          monthMap.get(monthKey).push(d);
+        });
+
+        const buckets = [];
+        monthMap.forEach((items, monthKey) => {
+          const dt = parseStrToDate(`${monthKey}-01`);
+          const count = Math.max(1, items.length);
+          let foodP = 0, carbsP = 0, protP = 0, vegP = 0, drinks = 0, rest = 0, act = 0;
+          let unwell = false;
+          items.forEach(item => {
+            foodP += item.summary.foodPortions;
+            carbsP += item.summary.carbsPortions;
+            protP += item.summary.proteinPortions;
+            vegP += item.summary.veggiesPortions;
+            drinks += item.summary.drinksMl;
+            rest += item.summary.restHours;
+            act += item.summary.actMinutes;
+            if (item.summary.isUnwell) unwell = true;
+          });
+
+          buckets.push({
+            shortLabel: dt.toLocaleDateString('en-US', { month: 'short' }),
+            tooltipTitle: `${dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} (Daily Avg)`,
+            foodPortions: foodP / count,
+            carbsPortions: carbsP / count,
+            proteinPortions: protP / count,
+            veggiesPortions: vegP / count,
+            drinksMl: drinks / count,
+            restHours: rest / count,
+            actMinutes: act / count,
+            isUnwell: unwell,
+          });
+        });
+        return buckets;
+      }
+
+      return daysData.map(d => {
+        const dt = parseStrToDate(d.date);
+        return {
+          shortLabel: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          tooltipTitle: dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+          foodPortions: d.summary.foodPortions,
+          carbsPortions: d.summary.carbsPortions,
+          proteinPortions: d.summary.proteinPortions,
+          veggiesPortions: d.summary.veggiesPortions,
+          drinksMl: d.summary.drinksMl,
+          restHours: d.summary.restHours,
+          actMinutes: d.summary.actMinutes,
+          isUnwell: d.summary.isUnwell,
+        };
+      });
+    }
+
+    /**
+     * Well/Unwell Monthly Calendar & Year-To-Date (YTD) Renderer
+     */
+    function changeCalendarMonth(delta) {
+      let newMonth = state.calendarMonth + delta;
+      let newYear = state.calendarYear;
+      if (newMonth < 0) {
+        newMonth = 11;
+        newYear -= 1;
+      } else if (newMonth > 11) {
+        newMonth = 0;
+        newYear += 1;
+      }
+      state.calendarMonth = newMonth;
+      state.calendarYear = newYear;
+      renderUnwellCalendar();
+    }
+
+    function resetCalendarToToday() {
+      const todayDt = parseStrToDate(getTodayStr());
+      state.calendarYear = todayDt.getFullYear();
+      state.calendarMonth = todayDt.getMonth();
+      state.calendarSelectedDate = getTodayStr();
+      renderUnwellCalendar();
+    }
+
+    function selectCalendarDate(dateStr) {
+      state.calendarSelectedDate = dateStr;
+      renderUnwellCalendar();
+    }
+
+    function jumpToEntryDate(dateStr) {
+      state.selectedDate = dateStr;
+      switchPage('entry');
+    }
+
+    function renderUnwellCalendar() {
+      const grid = document.getElementById('unwellCalendarGrid');
+      const monthLabel = document.getElementById('calendarMonthLabel');
+      const ytdText = document.getElementById('ytdUnwellCountText');
+      const todayBtn = document.getElementById('calTodayBtn');
+      const selectedInfo = document.getElementById('calendarSelectedDayInfo');
+      if (!grid || !monthLabel || !ytdText) return;
+
+      const todayStr = getTodayStr();
+      const todayDt = parseStrToDate(todayStr);
+      const currentYear = todayDt.getFullYear();
+      const ytdStartStr = `${currentYear}-01-01`;
+
+      // Collect unique unwell dates and year-to-date unwell day count
+      const unwellDatesSet = new Set();
+      const ytdUnwellDatesSet = new Set();
+
+      state.entries.forEach(e => {
+        if (e.category === 'wellbeing' && e.status === 'unwell' && e.date) {
+          unwellDatesSet.add(e.date);
+          if (e.date >= ytdStartStr && e.date <= todayStr) {
+            ytdUnwellDatesSet.add(e.date);
+          }
+        }
+      });
+
+      const ytdCount = ytdUnwellDatesSet.size;
+      ytdText.textContent = `${ytdCount} ${ytdCount === 1 ? 'day' : 'days'} unwell YTD (${currentYear})`;
+
+      const year = state.calendarYear;
+      const month = state.calendarMonth;
+      const firstOfMonth = new Date(year, month, 1);
+      monthLabel.textContent = firstOfMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      if (todayBtn) {
+        if (year === currentYear && month === todayDt.getMonth()) {
+          todayBtn.classList.add('hidden');
+        } else {
+          todayBtn.classList.remove('hidden');
+        }
+      }
+
+      const startWeekday = firstOfMonth.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      let cellsHtml = '';
+
+      for (let i = 0; i < startWeekday; i++) {
+        cellsHtml += `<div class="h-11 sm:h-12 rounded-xl bg-slate-50/40"></div>`;
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const mStr = String(month + 1).padStart(2, '0');
+        const dStr = String(day).padStart(2, '0');
+        const dateStr = `${year}-${mStr}-${dStr}`;
+        const isUnwell = unwellDatesSet.has(dateStr);
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === state.calendarSelectedDate;
+
+        let cellClasses = 'relative h-11 sm:h-12 rounded-xl border text-xs sm:text-sm font-semibold flex flex-col items-center justify-center transition cursor-pointer ';
+        if (isUnwell) {
+          cellClasses += 'bg-rose-50/80 border-rose-200/90 text-rose-900 hover:bg-rose-100/70 ';
+        } else {
+          cellClasses += 'bg-white border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200 ';
+        }
+        if (isToday) {
+          cellClasses += 'ring-2 ring-emerald-500/60 ';
+        }
+        if (isSelected) {
+          cellClasses += 'outline-2 outline-slate-800 ';
+        }
+
+        cellsHtml += `
+          <button
+            type="button"
+            onclick="selectCalendarDate('${dateStr}')"
+            class="${cellClasses}"
+            title="${escapeHtml(formatHumanDate(dateStr))}${isUnwell ? ' — Marked Unwell' : ''}"
+          >
+            <span>${day}</span>
+            ${isUnwell ? '<span class="w-2 h-2 rounded-full bg-rose-500 mt-0.5"></span>' : '<span class="w-2 h-2 mt-0.5"></span>'}
+          </button>
+        `;
+      }
+
+      grid.innerHTML = cellsHtml;
+
+      if (selectedInfo && state.calendarSelectedDate) {
+        const selEntries = state.entries.filter(e => e.date === state.calendarSelectedDate && e.category === 'wellbeing');
+        const unwellEntries = selEntries.filter(e => e.status === 'unwell');
+        const formattedSel = parseStrToDate(state.calendarSelectedDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
+        let statusSummary = '<span class="text-slate-400">No Well/Unwell log</span>';
+        if (unwellEntries.length > 0) {
+          const noteSnippet = unwellEntries[0].notes ? ` — "${escapeHtml(unwellEntries[0].notes)}"` : '';
+          statusSummary = `<span class="inline-flex items-center gap-1 font-semibold text-rose-600"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Unwell${noteSnippet}</span>`;
+        } else if (selEntries.length > 0) {
+          statusSummary = '<span class="font-semibold text-emerald-600">Feeling Well</span>';
+        }
+
+        selectedInfo.innerHTML = `
+          <span class="font-semibold text-slate-800">${formattedSel}:</span>
+          ${statusSummary}
+          <button
+            type="button"
+            onclick="jumpToEntryDate('${state.calendarSelectedDate}')"
+            class="ml-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-semibold transition"
+          >
+            View in Entry →
+          </button>
+        `;
+      }
+    }
+
+    function renderStatisticsPage(scrollToLatest = false) {
+      const daysData = getPeriodDaysData(state.statsDays);
+      const buckets = getChartBuckets(daysData, state.statsDays);
+
+      let totalFoodP = 0, totalDrinks = 0, totalRest = 0, totalAct = 0;
+      let restQualSum = 0, restQualHrs = 0;
+
+      daysData.forEach(d => {
+        const sum = getDaySummary(d.entries);
+        totalFoodP += sum.foodPortions;
+        totalDrinks += sum.drinksMl;
+        totalRest += sum.restHours;
+        totalAct += sum.actMinutes;
+        if (sum.restHours > 0) {
+          restQualSum += (sum.avgRestQuality * sum.restHours);
+          restQualHrs += sum.restHours;
+        }
+      });
+
+      const n = Math.max(1, daysData.length);
+      const avgFood = totalFoodP / n;
+      const avgDrinks = totalDrinks / n;
+      const avgRest = totalRest / n;
+      const avgAct = totalAct / n;
+      const overallAvgRestQual = restQualHrs > 0 ? restQualSum / restQualHrs : 0;
+
+      // Update KPIs
+      document.getElementById('kpiAvgFoodVal').textContent = formatPortionNumber(avgFood);
+      document.getElementById('kpiAvgFoodSub').textContent = `${formatPortionNumber(totalFoodP)} total portions`;
+
+      document.getElementById('kpiAvgDrinksVal').textContent = Math.round(avgDrinks).toLocaleString();
+      document.getElementById('kpiAvgDrinksSub').textContent = `${Math.round(totalDrinks).toLocaleString()} mL total`;
+
+      document.getElementById('kpiAvgRestVal').textContent = Number(avgRest).toFixed(1);
+      document.getElementById('kpiAvgRestSub').textContent = `Avg quality ${overallAvgRestQual > 0 ? overallAvgRestQual.toFixed(1) : '—'} / 5`;
+
+      document.getElementById('kpiAvgActVal').textContent = Math.round(avgAct);
+      document.getElementById('kpiAvgActSub').textContent = `${Math.round(totalAct)} total Minutes`;
+
+      document.getElementById('balanceChartTitle').textContent = state.statsDays === 180 ? 'Monthly Wellness Trends' : `${state.statsDays}-Day Wellness Trends`;
+      document.getElementById('netEnergyBadge').textContent = `Avg: ${formatPortionNumber(avgFood)} portions/day`;
+
+      renderBalanceTrendsChart(buckets, true);
+      renderMealPortionBreakdownChart(buckets, true);
+      renderUnwellCalendar();
+
+      if (scrollToLatest) {
+        const trendsWrap = document.getElementById('trendsScrollWrapper');
+        const energyWrap = document.getElementById('energyScrollWrapper');
+        if (trendsWrap) trendsWrap.scrollLeft = trendsWrap.scrollWidth;
+        if (energyWrap) energyWrap.scrollLeft = energyWrap.scrollWidth;
+      }
+    }
+
+    /**
+     * Canvas Drawing Helpers
+     */
+    function drawTopRoundedRect(ctx, x, y, w, h, radius) {
+      if (h < 0) {
+        y += h;
+        h = Math.abs(h);
+      }
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, w, h, [radius, radius, 0, 0]);
+      } else {
+        ctx.rect(x, y, w, h);
+      }
+      ctx.fill();
+    }
+
+    /**
+     * Prevents vertical overlap among canvas reference line labels
+     */
+    function resolveLabelYPositions(items, minGap, minY, maxY) {
+      const sorted = items
+        .map((item, idx) => ({ ...item, origIdx: idx, labelY: item.y }))
+        .sort((a, b) => a.y - b.y);
+
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i].labelY - sorted[i - 1].labelY < minGap) {
+          sorted[i].labelY = sorted[i - 1].labelY + minGap;
+        }
+      }
+
+      if (sorted.length > 0 && sorted[sorted.length - 1].labelY > maxY) {
+        sorted[sorted.length - 1].labelY = maxY;
+        for (let i = sorted.length - 2; i >= 0; i--) {
+          if (sorted[i + 1].labelY - sorted[i].labelY < minGap) {
+            sorted[i].labelY = sorted[i + 1].labelY - minGap;
+          }
+        }
+      }
+
+      for (let i = 0; i < sorted.length; i++) {
+        sorted[i].labelY = Math.max(minY, Math.min(maxY, sorted[i].labelY));
+      }
+
+      const result = new Array(items.length);
+      sorted.forEach(item => {
+        result[item.origIdx] = item.labelY;
+      });
+      return result;
+    }
+
+    /**
+     * Draws a dashed horizontal average reference line and a right-aligned pill badge
+     */
+    function drawAverageReferenceLine(ctx, lineY, labelY, padLeft, rightEdge, color, bgColor, text) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, lineY);
+      ctx.lineTo(rightEdge, lineY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.font = '600 10px Inter, sans-serif';
+      const textMetrics = ctx.measureText(text);
+      const pillPadX = 6;
+      const pillW = textMetrics.width + pillPadX * 2;
+      const pillH = 16;
+      const pillX = rightEdge - pillW - 4;
+      const pillY = labelY - pillH / 2;
+
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(pillX, pillY, pillW, pillH, 5);
+      } else {
+        ctx.rect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, pillX + pillW / 2, labelY + 0.5);
+      ctx.restore();
+    }
+
+    function renderBalanceTrendsChart(buckets, updateInnerWidth = true) {
+      const canvas = document.getElementById('trendsCanvas');
+      const inner = document.getElementById('trendsInnerContainer');
+      if (!canvas || !inner) return;
+
+      const groupW = 64;
+      const padLeft = 20;
+      const padRight = 98;
+      const totalW = Math.max(canvas.parentElement.clientWidth, buckets.length * groupW + padLeft + padRight);
+
+      if (updateInnerWidth) {
+        inner.style.width = `${totalW}px`;
+      }
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = totalW * dpr;
+      canvas.height = rect.height * dpr;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, totalW, rect.height);
+
+      const padTop = 24;
+      const padBottom = 40;
+      const plotH = rect.height - padTop - padBottom;
+      const plotW = totalW - padLeft - padRight;
+      const n = Math.max(1, buckets.length);
+      const computedGroupW = plotW / n;
+
+      // Find max values across metrics for scaling
+      let maxFood = 5, maxDrinks = 3000, maxRest = 12, maxAct = 120;
+      buckets.forEach(b => {
+        if (b.foodPortions > maxFood) maxFood = b.foodPortions * 1.1;
+        if (b.drinksMl > maxDrinks) maxDrinks = b.drinksMl * 1.1;
+        if (b.restHours > maxRest) maxRest = b.restHours * 1.1;
+        if (b.actMinutes > maxAct) maxAct = b.actMinutes * 1.1;
+      });
+
+      // Compute subtype averages
+      const avgFood = buckets.reduce((acc, b) => acc + b.foodPortions, 0) / n;
+      const avgDrinks = buckets.reduce((acc, b) => acc + b.drinksMl, 0) / n;
+      const avgRest = buckets.reduce((acc, b) => acc + b.restHours, 0) / n;
+      const avgAct = buckets.reduce((acc, b) => acc + b.actMinutes, 0) / n;
+
+      // Update legend badges with subtype averages
+      const foodBadge = document.getElementById('trendAvgFoodBadge');
+      const drinksBadge = document.getElementById('trendAvgDrinksBadge');
+      const restBadge = document.getElementById('trendAvgRestBadge');
+      const actBadge = document.getElementById('trendAvgActBadge');
+      if (foodBadge) foodBadge.textContent = `Avg: ${formatPortionNumber(avgFood)}`;
+      if (drinksBadge) drinksBadge.textContent = `Avg: ${Math.round(avgDrinks).toLocaleString()} mL`;
+      if (restBadge) restBadge.textContent = `Avg: ${Number(avgRest).toFixed(1)} Hours`;
+      if (actBadge) actBadge.textContent = `Avg: ${Math.round(avgAct)} Minutes`;
+
+      buckets.forEach((b, idx) => {
+        const groupX = padLeft + idx * computedGroupW;
+        const subW = (computedGroupW - 12) / 4;
+        const isHovered = idx === state.hoveredChartDayIndex;
+
+        if (isHovered) {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.04)';
+          ctx.fillRect(groupX, padTop, computedGroupW, plotH);
+        }
+
+        const foodH = (b.foodPortions / maxFood) * plotH;
+        const drinkH = (b.drinksMl / maxDrinks) * plotH;
+        const restH = (b.restHours / maxRest) * plotH;
+        const actH = (b.actMinutes / maxAct) * plotH;
+
+        // 1. Food (Emerald)
+        ctx.fillStyle = '#10b981';
+        drawTopRoundedRect(ctx, groupX + 2, padTop + plotH - foodH, subW, foodH, 3);
+
+        // 2. Drinks (Sky)
+        ctx.fillStyle = '#0ea5e9';
+        drawTopRoundedRect(ctx, groupX + 2 + subW, padTop + plotH - drinkH, subW, drinkH, 3);
+
+        // 3. Sleep/Rest (Indigo)
+        ctx.fillStyle = '#6366f1';
+        drawTopRoundedRect(ctx, groupX + 2 + subW * 2, padTop + plotH - restH, subW, restH, 3);
+
+        // 4. Activities (Amber)
+        ctx.fillStyle = '#f59e0b';
+        drawTopRoundedRect(ctx, groupX + 2 + subW * 3, padTop + plotH - actH, subW, actH, 3);
+
+        // X-axis label
+        const labelCenterX = groupX + computedGroupW / 2;
+        ctx.fillStyle = isHovered ? '#0f172a' : '#64748b';
+        ctx.font = `${isHovered ? '600' : '500'} 11px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(b.shortLabel, labelCenterX, rect.height - 12);
+
+        // Red dot on the right-hand side of the date if marked as unwell
+        if (b.isUnwell) {
+          const textW = ctx.measureText(b.shortLabel).width;
+          ctx.save();
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(labelCenterX + textW / 2 + 6, rect.height - 15.5, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+
+      // Draw individual average lines for all 4 subtypes
+      const refLines = [
+        {
+          y: padTop + plotH - (avgFood / maxFood) * plotH,
+          color: '#059669',
+          bg: 'rgba(236, 253, 245, 0.96)',
+          label: `Food ${formatPortionNumber(avgFood)}`,
+        },
+        {
+          y: padTop + plotH - (avgDrinks / maxDrinks) * plotH,
+          color: '#0284c7',
+          bg: 'rgba(240, 249, 255, 0.96)',
+          label: `Drinks ${Math.round(avgDrinks)}mL`,
+        },
+        {
+          y: padTop + plotH - (avgRest / maxRest) * plotH,
+          color: '#4f46e5',
+          bg: 'rgba(238, 242, 255, 0.96)',
+          label: `Rest ${Number(avgRest).toFixed(1)}h`,
+        },
+        {
+          y: padTop + plotH - (avgAct / maxAct) * plotH,
+          color: '#d97706',
+          bg: 'rgba(255, 251, 235, 0.96)',
+          label: `Act ${Math.round(avgAct)}m`,
+        },
+      ];
+
+      const labelYs = resolveLabelYPositions(refLines, 18, padTop + 8, padTop + plotH - 8);
+      refLines.forEach((line, i) => {
+        drawAverageReferenceLine(ctx, line.y, labelYs[i], padLeft, totalW - 4, line.color, line.bg, line.label);
+      });
+    }
+
+    function renderMealPortionBreakdownChart(buckets, updateInnerWidth = true) {
+      const canvas = document.getElementById('energyCanvas');
+      const inner = document.getElementById('energyInnerContainer');
+      if (!canvas || !inner) return;
+
+      const groupW = 58;
+      const padLeft = 24;
+      const padRight = 100;
+      const totalW = Math.max(canvas.parentElement.clientWidth, buckets.length * groupW + padLeft + padRight);
+
+      if (updateInnerWidth) {
+        inner.style.width = `${totalW}px`;
+      }
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = totalW * dpr;
+      canvas.height = rect.height * dpr;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, totalW, rect.height);
+
+      const padTop = 24;
+      const padBottom = 40;
+      const plotH = rect.height - padTop - padBottom;
+      const plotW = totalW - padLeft - padRight;
+      const n = Math.max(1, buckets.length);
+      const computedGroupW = plotW / n;
+
+      let maxMacro = 3;
+      buckets.forEach(b => {
+        if (b.carbsPortions > maxMacro) maxMacro = b.carbsPortions * 1.1;
+        if (b.proteinPortions > maxMacro) maxMacro = b.proteinPortions * 1.1;
+        if (b.veggiesPortions > maxMacro) maxMacro = b.veggiesPortions * 1.1;
+      });
+
+      // Compute averages for each meal subsection
+      const avgCarbs = buckets.reduce((acc, b) => acc + b.carbsPortions, 0) / n;
+      const avgProtein = buckets.reduce((acc, b) => acc + b.proteinPortions, 0) / n;
+      const avgVeggies = buckets.reduce((acc, b) => acc + b.veggiesPortions, 0) / n;
+
+      // Update legend badges with subsection averages
+      const carbsBadge = document.getElementById('macroAvgCarbsBadge');
+      const proteinBadge = document.getElementById('macroAvgProteinBadge');
+      const veggiesBadge = document.getElementById('macroAvgVeggiesBadge');
+      if (carbsBadge) carbsBadge.textContent = `Avg: ${formatPortionNumber(avgCarbs)}`;
+      if (proteinBadge) proteinBadge.textContent = `Avg: ${formatPortionNumber(avgProtein)}`;
+      if (veggiesBadge) veggiesBadge.textContent = `Avg: ${formatPortionNumber(avgVeggies)}`;
+
+      buckets.forEach((b, idx) => {
+        const groupX = padLeft + idx * computedGroupW;
+        const subW = (computedGroupW - 10) / 3;
+        const isHovered = idx === state.hoveredEnergyDayIndex;
+
+        if (isHovered) {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.04)';
+          ctx.fillRect(groupX, padTop, computedGroupW, plotH);
+        }
+
+        const carbH = (b.carbsPortions / maxMacro) * plotH;
+        const protH = (b.proteinPortions / maxMacro) * plotH;
+        const vegH = (b.veggiesPortions / maxMacro) * plotH;
+
+        // 1. Carbs (Amber)
+        ctx.fillStyle = '#f59e0b';
+        drawTopRoundedRect(ctx, groupX + 2, padTop + plotH - carbH, subW, carbH, 3);
+
+        // 2. Protein / Meat (Rose)
+        ctx.fillStyle = '#f43f5e';
+        drawTopRoundedRect(ctx, groupX + 2 + subW, padTop + plotH - protH, subW, protH, 3);
+
+        // 3. Vegetables / Fruits (Emerald)
+        ctx.fillStyle = '#10b981';
+        drawTopRoundedRect(ctx, groupX + 2 + subW * 2, padTop + plotH - vegH, subW, vegH, 3);
+
+        // X-axis label
+        const labelCenterX = groupX + computedGroupW / 2;
+        ctx.fillStyle = isHovered ? '#0f172a' : '#64748b';
+        ctx.font = `${isHovered ? '600' : '500'} 11px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(b.shortLabel, labelCenterX, rect.height - 12);
+
+        // Red dot on the right-hand side of the date if marked as unwell
+        if (b.isUnwell) {
+          const textW = ctx.measureText(b.shortLabel).width;
+          ctx.save();
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(labelCenterX + textW / 2 + 6, rect.height - 15.5, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+
+      // Draw individual average lines for all 3 meal subsections
+      const macroLines = [
+        {
+          y: padTop + plotH - (avgCarbs / maxMacro) * plotH,
+          color: '#d97706',
+          bg: 'rgba(255, 251, 235, 0.96)',
+          label: `Carbs ${formatPortionNumber(avgCarbs)}`,
+        },
+        {
+          y: padTop + plotH - (avgProtein / maxMacro) * plotH,
+          color: '#e11d48',
+          bg: 'rgba(255, 241, 242, 0.96)',
+          label: `Protein ${formatPortionNumber(avgProtein)}`,
+        },
+        {
+          y: padTop + plotH - (avgVeggies / maxMacro) * plotH,
+          color: '#059669',
+          bg: 'rgba(236, 253, 245, 0.96)',
+          label: `Veg/Fruit ${formatPortionNumber(avgVeggies)}`,
+        },
+      ];
+
+      const labelYs = resolveLabelYPositions(macroLines, 18, padTop + 8, padTop + plotH - 8);
+      macroLines.forEach((line, i) => {
+        drawAverageReferenceLine(ctx, line.y, labelYs[i], padLeft, totalW - 4, line.color, line.bg, line.label);
+      });
+    }
+
+    /**
+     * Toast Notifications
+     */
+    function showToast(message, type = 'success', onUndo = null) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `toast-enter pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold ${
+        type === 'success' ? 'bg-slate-900 text-white border-slate-800' :
+        type === 'undo' ? 'bg-amber-600 text-white border-amber-500' :
+        'bg-slate-900 text-white border-slate-800'
+      }`;
+
+      let content = `<span>${escapeHtml(message)}</span>`;
+      if (type === 'undo' && onUndo) {
+        content += `<button type="button" id="toastUndoBtn" class="px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white transition">Undo</button>`;
+      }
+      toast.innerHTML = content;
+
+      container.appendChild(toast);
+
+      if (type === 'undo' && onUndo) {
+        const undoBtn = toast.querySelector('#toastUndoBtn');
+        if (undoBtn) {
+          undoBtn.addEventListener('click', () => {
+            onUndo();
+            toast.remove();
+          });
+        }
+      }
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(12px)';
+        toast.style.transition = 'all 0.25s ease-in';
+        setTimeout(() => toast.remove(), 250);
+      }, 4000);
+    }
+
+    function handleLoadSampleData() {
+      if (state.editingEntryId) cancelEditEntry(true);
+      buildSampleEntries();
+      renderAll();
+      showToast('Loaded 6-month sample wellness data!', 'success');
+    }
+
+    /**
+     * JSON Backup & Restore for Migrating Data to iOS / Android
+     */
+    function handleExportBackup() {
+      try {
+        const payload = {
+          app: 'SimpleWellnessTracker 1.1',
+          exportedAt: new Date().toISOString(),
+          entries: state.entries,
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `SimpleWellnessTracker-1.1-backup-${getTodayStr()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('Backup JSON exported!', 'success');
+      } catch (err) {
+        console.error('Export failed:', err);
+        showToast('Could not export backup file.', 'info');
+      }
+    }
+
+    function triggerImportBackup() {
+      const input = document.getElementById('importBackupInput');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+
+    function handleImportBackupFile(event) {
+      const file = event.target?.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(String(e.target?.result || '{}'));
+          const importedEntries = Array.isArray(parsed) ? parsed : parsed.entries;
+          if (!Array.isArray(importedEntries)) {
+            showToast('Invalid backup file format.', 'info');
+            return;
+          }
+          if (state.editingEntryId) cancelEditEntry(true);
+          state.entries = importedEntries;
+          saveStateToStorage();
+          renderAll();
+          showToast(`Restored ${importedEntries.length} entries!`, 'success');
+        } catch (err) {
+          console.error('Import failed:', err);
+          showToast('Could not read backup JSON file.', 'info');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /**
+     * Generates Dynamic App Icon & Standalone Web App Manifest for iOS & Android
+     */
+    function initMobileAppManifest() {
+      try {
+        const iconCanvas = document.createElement('canvas');
+        iconCanvas.width = 512;
+        iconCanvas.height = 512;
+        const ctx = iconCanvas.getContext('2d');
+        if (!ctx) return;
+
+        // Rounded gradient background matching SimpleWellnessTracker brand
+        const grad = ctx.createLinearGradient(0, 0, 512, 512);
+        grad.addColorStop(0, '#10b981');
+        grad.addColorStop(0.5, '#14b8a6');
+        grad.addColorStop(1, '#0ea5e9');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Pulse line emblem
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 36;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(86, 266);
+        ctx.lineTo(168, 266);
+        ctx.lineTo(220, 134);
+        ctx.lineTo(292, 378);
+        ctx.lineTo(344, 266);
+        ctx.lineTo(426, 266);
+        ctx.stroke();
+
+        iconCanvas.toBlob((blob) => {
+          if (!blob) return;
+          const iconUrl = URL.createObjectURL(blob);
+          const appleLink = document.getElementById('appleTouchIcon');
+          if (appleLink) appleLink.href = iconUrl;
+
+          const manifest = {
+            name: 'SimpleWellnessTracker 1.1',
+            short_name: 'SimpleWellnessTracker',
+            description: 'Daily Wellness & Consumption Tracker',
+            start_url: './',
+            display: 'standalone',
+            background_color: '#f8fafc',
+            theme_color: '#ffffff',
+            icons: [
+              {
+                src: iconUrl,
+                sizes: '512x512',
+                type: 'image/png',
+                purpose: 'any maskable',
+              },
+            ],
+          };
+
+          const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+          const manifestUrl = URL.createObjectURL(manifestBlob);
+          const manifestLink = document.getElementById('webManifestLink');
+          if (manifestLink) manifestLink.href = manifestUrl;
+        }, 'image/png');
+      } catch (err) {
+        console.error('Mobile manifest setup skipped:', err);
+      }
+    }
+
+    /**
+     * Chart Tooltip & Interaction Setup
+     */
+    function setupChartInteractions() {
+      const trendsCanvas = document.getElementById('trendsCanvas');
+      const trendsWrapper = document.getElementById('trendsScrollWrapper');
+      const energyCanvas = document.getElementById('energyCanvas');
+      const energyWrapper = document.getElementById('energyScrollWrapper');
+      const tooltip = document.getElementById('chartTooltip');
+      const energyTooltip = document.getElementById('energyTooltip');
+
+      if (trendsCanvas && tooltip) {
+        trendsCanvas.addEventListener('mousemove', (e) => {
+          const rect = trendsCanvas.getBoundingClientRect();
+          const wrapRect = trendsWrapper ? trendsWrapper.getBoundingClientRect() : rect;
+          const x = e.clientX - rect.left;
+          const daysData = getPeriodDaysData(state.statsDays);
+          const buckets = getChartBuckets(daysData, state.statsDays);
+          const padLeft = 20;
+          const padRight = 98;
+          const plotW = Math.max(1, rect.width - padLeft - padRight);
+          const groupW = plotW / Math.max(1, buckets.length);
+          const idx = Math.floor((x - padLeft) / groupW);
+
+          if (idx >= 0 && idx < buckets.length) {
+            state.hoveredChartDayIndex = idx;
+            renderBalanceTrendsChart(buckets, false);
+
+            const n = Math.max(1, buckets.length);
+            const avgFood = buckets.reduce((a, d) => a + d.foodPortions, 0) / n;
+            const avgDrinks = buckets.reduce((a, d) => a + d.drinksMl, 0) / n;
+            const avgRest = buckets.reduce((a, d) => a + d.restHours, 0) / n;
+            const avgAct = buckets.reduce((a, d) => a + d.actMinutes, 0) / n;
+
+            const b = buckets[idx];
+            tooltip.innerHTML = `
+              <div class="font-bold text-slate-100 mb-1.5 border-b border-slate-700 pb-1 text-xs flex items-center gap-1.5">
+                <span>${escapeHtml(b.tooltipTitle)}</span>
+                ${b.isUnwell ? '<span class="w-2 h-2 rounded-full bg-rose-500 inline-block" title="Marked Unwell"></span>' : ''}
+              </div>
+              <div class="space-y-1 text-[11px]">
+                <div class="flex justify-between gap-3"><span class="text-emerald-400">Food: ${formatPortionNumber(b.foodPortions)}</span><span class="text-slate-400">(Avg ${formatPortionNumber(avgFood)})</span></div>
+                <div class="flex justify-between gap-3"><span class="text-sky-400">Drinks: ${Math.round(b.drinksMl)} mL</span><span class="text-slate-400">(Avg ${Math.round(avgDrinks)})</span></div>
+                <div class="flex justify-between gap-3"><span class="text-indigo-400">Sleep/Rest: ${Number(b.restHours).toFixed(1)} Hours</span><span class="text-slate-400">(Avg ${Number(avgRest).toFixed(1)})</span></div>
+                <div class="flex justify-between gap-3"><span class="text-amber-400">Activity: ${Math.round(b.actMinutes)} Minutes</span><span class="text-slate-400">(Avg ${Math.round(avgAct)})</span></div>
+              </div>
+            `;
+            tooltip.classList.remove('hidden');
+            const relX = e.clientX - wrapRect.left;
+            tooltip.style.left = `${Math.max(8, Math.min(relX + 14, wrapRect.width - 240))}px`;
+            tooltip.style.top = `${Math.max(8, e.clientY - wrapRect.top - 95)}px`;
+          }
+        });
+
+        trendsCanvas.addEventListener('mouseleave', () => {
+          state.hoveredChartDayIndex = -1;
+          const daysData = getPeriodDaysData(state.statsDays);
+          const buckets = getChartBuckets(daysData, state.statsDays);
+          renderBalanceTrendsChart(buckets, false);
+          tooltip.classList.add('hidden');
+        });
+      }
+
+      if (energyCanvas && energyTooltip) {
+        energyCanvas.addEventListener('mousemove', (e) => {
+          const rect = energyCanvas.getBoundingClientRect();
+          const wrapRect = energyWrapper ? energyWrapper.getBoundingClientRect() : rect;
+          const x = e.clientX - rect.left;
+          const daysData = getPeriodDaysData(state.statsDays);
+          const buckets = getChartBuckets(daysData, state.statsDays);
+          const padLeft = 24;
+          const padRight = 100;
+          const plotW = Math.max(1, rect.width - padLeft - padRight);
+          const groupW = plotW / Math.max(1, buckets.length);
+          const idx = Math.floor((x - padLeft) / groupW);
+
+          if (idx >= 0 && idx < buckets.length) {
+            state.hoveredEnergyDayIndex = idx;
+            renderMealPortionBreakdownChart(buckets, false);
+
+            const n = Math.max(1, buckets.length);
+            const avgCarbs = buckets.reduce((a, d) => a + d.carbsPortions, 0) / n;
+            const avgProtein = buckets.reduce((a, d) => a + d.proteinPortions, 0) / n;
+            const avgVeggies = buckets.reduce((a, d) => a + d.veggiesPortions, 0) / n;
+
+            const b = buckets[idx];
+            energyTooltip.innerHTML = `
+              <div class="font-bold text-slate-100 mb-1.5 border-b border-slate-700 pb-1 text-xs flex items-center gap-1.5">
+                <span>${escapeHtml(b.tooltipTitle)}</span>
+                ${b.isUnwell ? '<span class="w-2 h-2 rounded-full bg-rose-500 inline-block" title="Marked Unwell"></span>' : ''}
+              </div>
+              <div class="space-y-1 text-[11px]">
+                <div class="flex justify-between gap-3"><span class="text-amber-400">Carbs: ${formatPortionNumber(b.carbsPortions)}</span><span class="text-slate-400">(Avg ${formatPortionNumber(avgCarbs)})</span></div>
+                <div class="flex justify-between gap-3"><span class="text-rose-400">Protein/Meat: ${formatPortionNumber(b.proteinPortions)}</span><span class="text-slate-400">(Avg ${formatPortionNumber(avgProtein)})</span></div>
+                <div class="flex justify-between gap-3"><span class="text-emerald-400">Vegetables/Fruits: ${formatPortionNumber(b.veggiesPortions)}</span><span class="text-slate-400">(Avg ${formatPortionNumber(avgVeggies)})</span></div>
+              </div>
+            `;
+            energyTooltip.classList.remove('hidden');
+            const relX = e.clientX - wrapRect.left;
+            energyTooltip.style.left = `${Math.max(8, Math.min(relX + 14, wrapRect.width - 240))}px`;
+            energyTooltip.style.top = `${Math.max(8, e.clientY - wrapRect.top - 85)}px`;
+          }
+        });
+
+        energyCanvas.addEventListener('mouseleave', () => {
+          state.hoveredEnergyDayIndex = -1;
+          const daysData = getPeriodDaysData(state.statsDays);
+          const buckets = getChartBuckets(daysData, state.statsDays);
+          renderMealPortionBreakdownChart(buckets, false);
+          energyTooltip.classList.add('hidden');
+        });
+      }
+    }
+
+    /**
+     * Application Bootstrap
+     */
+    window.addEventListener('load', () => {
+      initMobileAppManifest();
+      loadStateFromStorage();
+      selectCategoryTab('food');
+      setTimelineFilter('all');
+      setupChartInteractions();
+      renderAll();
+
+      window.addEventListener('resize', () => {
+        if (state.currentPage === 'statistics') {
+          const buckets = getChartBuckets(getPeriodDaysData(state.statsDays), state.statsDays);
+          renderBalanceTrendsChart(buckets, true);
+          renderMealPortionBreakdownChart(buckets, true);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
